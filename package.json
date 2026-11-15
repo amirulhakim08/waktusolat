@@ -1,12 +1,19 @@
 {
-  "name": "app",
+  "name": "waktusolat",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "typecheck": "next typegen && tsc --noEmit",
+    "test": "vitest run tests/unit",
+    "test:db": "bash -c \"export TEST_DATABASE_URL=$(scripts/test-db.sh start) && vitest run tests/db\"",
+    "test:e2e": "playwright test --trace off",
+    "test:all": "npm run test && npm run test:db && npm run test:e2e",
+    "bootstrap:master": "tsx scripts/bootstrap-master.ts",
+    "icons": "node scripts/generate-icons.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
@@ -31,5 +38,8 @@
     "tsx": "^4.23.15",
     "typescript": "^5",
     "vitest": "^5.1.0"
+  },
+  "engines": {
+    "node": ">=20.9"
   }
 }
