@@ -23,6 +23,8 @@ function putWithProgress(url: string, file: File, onProgress: (pct: number) => v
     const xhr = new XMLHttpRequest();
     xhr.open("PUT", url);
     xhr.setRequestHeader("x-upsert", "false");
+    const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    if (anon) xhr.setRequestHeader("apikey", anon); // public key; the signed token authorises the write
     xhr.upload.onprogress = (e) => e.lengthComputable && onProgress(Math.round((e.loaded / e.total) * 100));
     xhr.onload = () => (xhr.status >= 200 && xhr.status < 300 ? resolve() : reject(new Error(`HTTP ${xhr.status}`)));
     xhr.onerror = () => reject(new Error("network"));
