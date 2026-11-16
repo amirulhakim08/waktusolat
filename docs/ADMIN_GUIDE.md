@@ -16,6 +16,16 @@ Panduan ini untuk **Master Super Admin** (pentadbir sistem) dan **Pentadbir Masj
 ### 2. Papan pemuka (`/admin`)
 Menunjukkan zon, waktu solat seterusnya, bilangan gambar, playlist yang sedang dipaparkan, storan dan bilangan paparan dalam talian.
 
+### 2a. Waktu solat manual (`/admin/prayer-times`)
+Untuk lokasi yang tidak diliputi zon JAKIM, contohnya pelantar luar pesisir:
+1. Di **Sumber waktu solat**, pilih **Manual**, kemudian klik **Simpan sumber**.
+2. Masukkan waktu menggunakan salah satu cara:
+   - **Julat tarikh**: pilih tarikh mula dan akhir, isi 6 waktu, kemudian klik **Simpan waktu**. Waktu yang sama digunakan untuk semua tarikh dalam julat.
+   - **Tampal jadual**: salin dari Excel/Google Sheets (lajur: Tarikh, Subuh, Syuruk, Zohor, Asar, Maghrib, Isyak) dan klik **Import jadual**.
+3. Pastikan sentiasa ada waktu untuk hari ini dan hari-hari akan datang. Jika waktu hari ini tiada, TV memaparkan amaran dan Mod Solat automatik tidak bermula.
+
+Paparan TV menandakan waktu ini sebagai *“Waktu ditetapkan oleh masjid”*. Tarikh Hijrah masih diambil daripada zon JAKIM masjid. Tukar semula ke **JAKIM** pada bila-bila masa.
+
 ### 3. Muat naik poster (`/admin/media`)
 1. **Pilih fail** — JPEG, PNG atau WebP (maksimum 2 MB), atau video MP4 H.264 (pilihan).
 2. Semak **pratonton** (nisbah skrin TV 16:9).

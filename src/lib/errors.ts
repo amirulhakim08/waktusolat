@@ -31,6 +31,8 @@ const MESSAGES: Record<string, string> = {
   playlist_not_found: "Playlist tidak dijumpai.",
   invalid_duration: "Tempoh tidak sah.",
   invalid_logo: "Logo mesti gambar milik masjid ini.",
+  invalid_rows: "Data waktu solat tidak sah.",
+  invalid_source: "Sumber waktu solat tidak sah.",
   role_change_forbidden: "Perubahan peranan tidak dibenarkan.",
   mosque_applications_one_open_per_applicant: "Anda sudah mempunyai permohonan yang sedang diproses.",
 };

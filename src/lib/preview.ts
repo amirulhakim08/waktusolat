@@ -21,6 +21,27 @@ export async function loadSchedules(supabase: SupabaseClient, zone: string, from
   }));
 }
 
+export async function loadManualSchedules(supabase: SupabaseClient, mosqueId: string, zone: string, from: string, to: string): Promise<DaySchedule[]> {
+  const [{ data }, zoneDays] = await Promise.all([
+    supabase.from("manual_prayer_times").select("date, subuh, syuruk, zohor, asar, maghrib, isyak, updated_at")
+      .eq("mosque_id", mosqueId).gte("date", from).lte("date", to).order("date"),
+    loadSchedules(supabase, zone, from, to),
+  ]);
+  const hijri = new Map(zoneDays.map((d) => [d.date, d.hijri]));
+  const t = (v: string) => String(v).slice(0, 5);
+  return (data ?? []).map((d) => ({
+    date: d.date, hijri: hijri.get(d.date) ?? null, subuh: t(d.subuh), syuruk: t(d.syuruk), zohor: t(d.zohor),
+    asar: t(d.asar), maghrib: t(d.maghrib), isyak: t(d.isyak), source: "manual", fetched_at: d.updated_at,
+  }));
+}
+
+/** Schedules from the mosque's chosen source (JAKIM zone or manual entries). */
+export function loadMosqueSchedules(supabase: SupabaseClient, mosque: Pick<MosqueRow, "id" | "zone_code" | "prayer_time_source">, from: string, to: string) {
+  return mosque.prayer_time_source === "manual"
+    ? loadManualSchedules(supabase, mosque.id, mosque.zone_code, from, to)
+    : loadSchedules(supabase, mosque.zone_code, from, to);
+}
+
 /** Builds a display payload from DRAFT data, for the admin preview only. */
 export async function buildDraftPayload(
   supabase: SupabaseClient, mosque: MosqueRow,
@@ -36,7 +57,7 @@ export async function buildDraftPayload(
       : Promise.resolve({ data: [] }),
     supabase.from("prayer_mode_settings").select("*").eq("mosque_id", mosque.id),
     supabase.from("display_settings").select("*").eq("mosque_id", mosque.id).maybeSingle(),
-    loadSchedules(supabase, mosque.zone_code, addDays(today, -1), addDays(today, 7)),
+    loadMosqueSchedules(supabase, mosque, addDays(today, -1), addDays(today, 7)),
     mosque.logo_asset_id ? supabase.from("media_assets").select("storage_path").eq("id", mosque.logo_asset_id).maybeSingle() : Promise.resolve({ data: null }),
   ]);
 
@@ -63,7 +84,7 @@ export async function buildDraftPayload(
   }
   const { supabaseUrl } = publicEnv();
   return {
-    mosque: { id: mosque.id, name: mosque.name, slug: mosque.slug, zone: mosque.zone_code, logo_path: logo?.storage_path ?? null },
+    mosque: { id: mosque.id, name: mosque.name, slug: mosque.slug, zone: mosque.zone_code, logo_path: logo?.storage_path ?? null, prayer_time_source: mosque.prayer_time_source },
     playlist: { version: 0, published_at: new Date().toISOString(), items: slides },
     prayer_mode: config,
     display: ds ?? {},

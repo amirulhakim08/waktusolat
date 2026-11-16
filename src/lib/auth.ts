@@ -26,6 +26,7 @@ export interface MosqueRow {
   status_reason: string | null;
   storage_quota_bytes: number;
   logo_asset_id: string | null;
+  prayer_time_source: "jakim" | "manual";
   created_at: string;
 }
 

@@ -275,6 +275,28 @@ test.describe("data validity, offline and multiple displays", () => {
     await expect(page.getByTestId("prayer-bar").locator('[data-prayer="maghrib"]')).toContainText("--:--");
   });
 
+  test("manual prayer times are labelled and drive Prayer Mode like official ones", async ({ page }) => {
+    await page.clock.install({ time: at(DATE, "19:06:00") });
+    const p = payload({ schedules: [{ ...day(DATE, "19:05"), source: "manual" }] }) as ReturnType<typeof payload> & { mosque: Record<string, unknown> };
+    p.mosque.prayer_time_source = "manual";
+    await setup(page, () => p);
+    await page.goto("/surau-al-amin");
+    await expect(page.getByTestId("mode-countdown")).toBeVisible();
+    await page.clock.runFor(5 * 60_000);
+    await expect(page.getByTestId("mode-solat")).toBeVisible();
+    await page.clock.runFor(5 * 60_000);
+    await expect(page.getByTestId("manual-label")).toHaveText(/Waktu ditetapkan oleh masjid/);
+  });
+
+  test("missing manual times show a manual-specific warning", async ({ page }) => {
+    await page.clock.install({ time: at(DATE, "12:00:00") });
+    const p = payload({ schedules: [] }) as ReturnType<typeof payload> & { mosque: Record<string, unknown> };
+    p.mosque.prayer_time_source = "manual";
+    await setup(page, () => p);
+    await page.goto("/surau-al-amin");
+    await expect(page.getByTestId("warnings")).toContainText("belum dimasukkan oleh pentadbir masjid");
+  });
+
   test("keeps running from cache when the connection drops, then recovers", async ({ page }) => {
     await page.clock.install({ time: at(DATE, "19:10:00") });
     let online = true;

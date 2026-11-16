@@ -12,7 +12,7 @@ export interface DisplaySettings {
 }
 
 export interface DisplayPayload {
-  mosque: { id: string; name: string; slug: string; zone: string; district?: string; state?: string; logo_path: string | null };
+  mosque: { id: string; name: string; slug: string; zone: string; district?: string; state?: string; logo_path: string | null; prayer_time_source?: "jakim" | "manual" };
   playlist: { version: number; published_at: string; items: SlideItem[] } | null;
   prayer_mode: PrayerModeConfig;
   display: Partial<DisplaySettings>;
