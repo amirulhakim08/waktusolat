@@ -11,7 +11,7 @@ Each approved mosque gets a public TV page (e.g. `https://waktusolat.vercel.app/
 ## Features
 
 - **Three roles**: Master Super Admin (`/master`), one Mosque Super Admin per mosque (`/admin`), and anonymous public viewers (`/[slug]`).
-- **Registration & approval**: email-verified applications with a private authorisation document; the Master approves, rejects or requests more information. One active admin per mosque is enforced by a database constraint plus transactional SQL functions; admin replacement is explicit and audited.
+- **Registration & approval**: applications (email verification optional per Supabase setting) with an optional private authorisation document; the Master approves, rejects or requests more information. One active admin per mosque is enforced by a database constraint plus transactional SQL functions; admin replacement is explicit and audited.
 - **Official prayer times** from JAKIM e-Solat per zone, cached in Postgres, strictly validated, never substituted. Missing data shows a warning and disables automatic Prayer Mode.
 - **Prayer Mode state engine**: pure, deterministic `NORMAL → COUNTDOWN → SOLAT → NORMAL` computed from corrected time, schedule, published settings, Friday rules and manual overrides. Browser refresh, sleep/wake and reconnects resume at the correct remaining time.
 - **Per-prayer settings** (countdown, Solat duration, messages, enable/disable), Jumaat settings, draft → publish workflow, and **manual overrides** (start countdown/Solat now, end, return to automatic) with expiry and audit.

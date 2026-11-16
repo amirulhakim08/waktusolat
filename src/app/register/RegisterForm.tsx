@@ -95,10 +95,10 @@ export function RegisterForm({ zones }: { zones: ZoneOption[] }) {
       </fieldset>
 
       <fieldset className="space-y-3">
-        <legend className="mb-1 text-sm font-semibold uppercase tracking-wide text-brand-800">Dokumen sokongan</legend>
+        <legend className="mb-1 text-sm font-semibold uppercase tracking-wide text-brand-800">Dokumen sokongan (pilihan)</legend>
         <Field label="Surat kebenaran / lantikan" htmlFor="document" error={err("document")}
-          hint="PDF, JPG, PNG atau WebP, maksimum 5 MB. Dokumen disimpan secara peribadi dan hanya dilihat oleh pentadbir sistem.">
-          <Input id="document" name="document" type="file" required accept="application/pdf,image/jpeg,image/png,image/webp" invalid={!!err("document")} />
+          hint="Tidak wajib. PDF, JPG, PNG atau WebP, maksimum 5 MB. Dokumen disimpan secara peribadi dan hanya dilihat oleh pentadbir sistem.">
+          <Input id="document" name="document" type="file" accept="application/pdf,image/jpeg,image/png,image/webp" invalid={!!err("document")} />
         </Field>
       </fieldset>
 

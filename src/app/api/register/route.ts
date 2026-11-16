@@ -28,20 +28,26 @@ export async function POST(req: Request) {
       .map((k) => [k, String(form.get(k) ?? "")]),
   );
   const parsed = registrationSchema.safeParse(raw);
-  const file = form.get("document");
-  const fileMeta = documentMetaSchema.safeParse(file instanceof File ? { size: file.size, type: file.type } : {});
+  // The supporting document is OPTIONAL; validate it only when one is attached.
+  const entry = form.get("document");
+  const file = entry instanceof File && entry.size > 0 ? entry : null;
+  const fileMeta = file ? documentMetaSchema.safeParse({ size: file.size, type: file.type }) : null;
   const fields = { ...(parsed.success ? {} : fieldErrors(parsed.error)) };
-  if (!fileMeta.success) fields.document = fileMeta.error.issues[0]?.message ?? "Sila lampirkan dokumen sokongan";
-  if (!parsed.success || !fileMeta.success || !(file instanceof File)) {
+  if (fileMeta && !fileMeta.success) fields.document = fileMeta.error.issues[0]?.message ?? "Dokumen tidak sah";
+  if (!parsed.success || (fileMeta && !fileMeta.success)) {
     return fail("Sila semak semula maklumat borang.", 400, fields);
   }
   const input = parsed.data;
 
   // Verify the actual bytes, not the browser-declared type.
-  const bytes = new Uint8Array(await file.arrayBuffer());
-  const detected = detectFileType(bytes);
-  if (!detected || detected === "video/mp4" || detected !== file.type) {
-    return fail("Dokumen sokongan mesti fail PDF atau gambar yang sah.", 400, { document: "Format dokumen tidak sah" });
+  let doc: { bytes: Uint8Array; mime: NonNullable<ReturnType<typeof detectFileType>>; name: string; size: number } | null = null;
+  if (file) {
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    const detected = detectFileType(bytes);
+    if (!detected || detected === "video/mp4" || detected !== file.type) {
+      return fail("Dokumen sokongan mesti fail PDF atau gambar yang sah.", 400, { document: "Format dokumen tidak sah" });
+    }
+    doc = { bytes, mime: detected, name: file.name.slice(0, 200), size: file.size };
   }
 
   const admin = createAdminClient();
@@ -70,10 +76,12 @@ export async function POST(req: Request) {
   }
   const userId = signUp.user.id;
 
-  const docPath = `${userId}/${randomUUID()}.${EXT_FOR[detected]}`;
+  const docPath = doc ? `${userId}/${randomUUID()}.${EXT_FOR[doc.mime]}` : null;
   try {
-    const up = await admin.storage.from(DOCUMENTS_BUCKET).upload(docPath, bytes, { contentType: detected, upsert: false });
-    if (up.error) throw up.error;
+    if (doc && docPath) {
+      const up = await admin.storage.from(DOCUMENTS_BUCKET).upload(docPath, doc.bytes, { contentType: doc.mime, upsert: false });
+      if (up.error) throw up.error;
+    }
     const ins = await admin.from("mosque_applications").insert({
       applicant_id: userId,
       full_name: input.full_name,
@@ -86,15 +94,15 @@ export async function POST(req: Request) {
       zone_code: input.zone_code,
       applicant_position: input.applicant_position,
       document_path: docPath,
-      document_name: file.name.slice(0, 200),
-      document_size: file.size,
-      document_mime: detected,
+      document_name: doc?.name ?? null,
+      document_size: doc?.size ?? null,
+      document_mime: doc?.mime ?? null,
     });
     if (ins.error) throw ins.error;
   } catch (e) {
     // Roll back so the applicant can retry with the same e-mail.
     console.error("[register] rollback", e);
-    await admin.storage.from(DOCUMENTS_BUCKET).remove([docPath]).catch(() => undefined);
+    if (docPath) await admin.storage.from(DOCUMENTS_BUCKET).remove([docPath]).catch(() => undefined);
     await admin.auth.admin.deleteUser(userId).catch(() => undefined);
     return fail("Permohonan tidak dapat disimpan. Sila cuba lagi.", 500);
   }
