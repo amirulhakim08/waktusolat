@@ -37,7 +37,7 @@ export type RegistrationInput = z.infer<typeof registrationSchema>;
 
 export const DOCUMENT_MIME = ["application/pdf", "image/jpeg", "image/png", "image/webp"] as const;
 export const documentMetaSchema = z.object({
-  size: z.number().int().positive("Sila lampirkan dokumen sokongan").max(MAX_DOCUMENT_BYTES, "Dokumen melebihi 5 MB"),
+  size: z.number().int().positive("Dokumen kosong").max(MAX_DOCUMENT_BYTES, "Dokumen melebihi 5 MB"),
   type: z.enum(DOCUMENT_MIME, { message: "Dokumen mesti PDF, JPG, PNG atau WebP" }),
 });
 

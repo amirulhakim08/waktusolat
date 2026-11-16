@@ -9,7 +9,7 @@ Panduan ini untuk **Master Super Admin** (pentadbir sistem) dan **Pentadbir Masj
 ### 1. Mendaftar
 1. Buka `https://waktusolat.vercel.app/register`.
 2. Isi maklumat diri, maklumat masjid/surau, pilih **negeri** dan **zon waktu solat JAKIM**.
-3. Lampirkan **surat kebenaran/lantikan** (PDF atau gambar, maksimum 5 MB).
+3. (Pilihan) Lampirkan **surat kebenaran/lantikan** (PDF atau gambar, maksimum 5 MB).
 4. Klik pautan pengesahan dalam e-mel anda.
 5. Tunggu kelulusan. Semak status di `/permohonan` selepas log masuk. Jika pentadbir sistem meminta maklumat tambahan, jawab terus di halaman tersebut.
 
