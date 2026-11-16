@@ -26,6 +26,7 @@ Helper functions used by policies: `is_master()`, `admin_mosque_id()`, `can_mana
 | `mosque_applications` | registrations | – | own | – | all | server (service role) + review functions |
 | `mosque_admin_assignments` | admin history; **unique active per mosque & per user** | – | own | own | all | review/revoke functions |
 | `prayer_schedules` | cached official times (`unique(zone,date)`, ordered-times check) | read | read | read | read | service role sync |
+| `manual_prayer_times` | per-mosque manual times (`mosques.prayer_time_source = 'manual'`, e.g. offshore); ordered-times check | – | – | own read | read | `upsert_manual_prayer_times`, `delete_manual_prayer_times` |
 | `prayer_fetch_log` | sync status/cooldown | – | read | read | read | service role |
 | `media_assets` | media metadata (pending reservations + ready) | – | – | own (rename) | all | `reserve_media_upload`, `finalize_media_upload`, `delete_media_asset` |
 | `storage_deletion_queue` | keeps bucket and DB consistent | – | – | – | – | functions; drained by server/cron |

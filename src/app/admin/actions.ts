@@ -13,6 +13,8 @@ import {
   displaySettingsSchema, itemSettingsSchema, overrideSchema, passwordSchema, phoneSchema, prayerModeRowSchema, slugSchema, zoneCode,
 } from "@/lib/validation";
 import { MALAYSIAN_STATES } from "@/lib/constants";
+import { expandRange, normaliseDate, parseManualCsv, validateTimes, type ManualRow } from "@/lib/prayer/manual";
+import { PRAYER_KEYS } from "@/lib/prayer/types";
 
 const str = (fd: FormData, k: string) => String(fd.get(k) ?? "").trim();
 const fail = (e: unknown): ActionResult => ({ ok: false, error: friendlyError(e) });
@@ -252,4 +254,58 @@ export async function changePasswordAction(_p: ActionResult | null, fd: FormData
   const { error } = await supabase.auth.updateUser({ password: next.data });
   if (error) return { ok: false, error: "Kata laluan tidak dapat ditukar. Cuba kata laluan yang lebih kuat." };
   return { ok: true, message: "Kata laluan ditukar." };
+}
+
+// ---------------------------------------------------------------- manual prayer times
+export async function setPrayerSourceAction(_p: ActionResult | null, fd: FormData): Promise<ActionResult> {
+  const { supabase, mosqueId } = await requireMosqueAdmin();
+  const source = str(fd, "source");
+  if (source !== "jakim" && source !== "manual") return { ok: false, error: "Sumber tidak sah." };
+  const { error } = await supabase.rpc("set_prayer_time_source", { p_mosque_id: mosqueId, p_source: source });
+  if (error) return fail(error);
+  await broadcastDisplayUpdate(mosqueId, "settings");
+  revalidatePath("/admin", "layout");
+  return {
+    ok: true,
+    message: source === "manual"
+      ? "Paparan TV kini menggunakan waktu manual. Pastikan waktu untuk hari ini dan hari-hari akan datang telah dimasukkan."
+      : "Paparan TV kini menggunakan waktu rasmi JAKIM.",
+  };
+}
+
+async function saveManualRows(rows: ManualRow[]): Promise<ActionResult> {
+  const { supabase, mosqueId } = await requireMosqueAdmin();
+  const { data, error } = await supabase.rpc("upsert_manual_prayer_times", { p_mosque_id: mosqueId, p_rows: rows });
+  if (error) return fail(error);
+  await broadcastDisplayUpdate(mosqueId, "settings");
+  revalidatePath("/admin", "layout");
+  return { ok: true, message: `Waktu solat disimpan untuk ${data} hari.` };
+}
+
+export async function saveManualRangeAction(_p: ActionResult | null, fd: FormData): Promise<ActionResult> {
+  const v = validateTimes(Object.fromEntries(PRAYER_KEYS.map((k) => [k, str(fd, k)])));
+  if (!v.ok) return { ok: false, error: v.error };
+  const r = expandRange(str(fd, "from"), str(fd, "to") || str(fd, "from"), v.times);
+  if (!r.ok) return { ok: false, error: r.error };
+  return saveManualRows(r.rows);
+}
+
+export async function importManualCsvAction(_p: ActionResult | null, fd: FormData): Promise<ActionResult> {
+  const text = String(fd.get("csv") ?? "");
+  if (text.length > 100_000) return { ok: false, error: "Data terlalu besar." };
+  const { rows, errors } = parseManualCsv(text);
+  if (errors.length) return { ok: false, error: `Tiada data disimpan. Betulkan ralat berikut: ${errors.slice(0, 5).join(" · ")}${errors.length > 5 ? ` (+${errors.length - 5} lagi)` : ""}` };
+  if (!rows.length) return { ok: false, error: "Tiada baris untuk disimpan." };
+  return saveManualRows(rows);
+}
+
+export async function deleteManualDateAction(_p: ActionResult | null, fd: FormData): Promise<ActionResult> {
+  const { supabase, mosqueId } = await requireMosqueAdmin();
+  const date = normaliseDate(str(fd, "date"));
+  if (!date) return { ok: false, error: "Tarikh tidak sah." };
+  const { error } = await supabase.rpc("delete_manual_prayer_times", { p_mosque_id: mosqueId, p_from: date, p_to: date });
+  if (error) return fail(error);
+  await broadcastDisplayUpdate(mosqueId, "settings");
+  revalidatePath("/admin/prayer-times");
+  return { ok: true, message: `Waktu ${date} dipadam.` };
 }

@@ -557,6 +557,77 @@ describe.skipIf(!hasDb)("database: registration, approval & tenancy", () => {
     });
   });
 
+  describe("manual prayer times (e.g. offshore)", () => {
+    const rows = (date: string, maghrib = "19:05") => ({ date, subuh: "05:40", syuruk: "06:55", zohor: "12:55", asar: "16:15", maghrib, isyak: "20:15" });
+    const today = () => new Date(Date.now() + 8 * 3600_000).toISOString().slice(0, 10);
+
+    it("admin stores manual times; public display uses them only when source is manual", async () => {
+      const M = await createApprovedMosque(pool, masterId, "pelantar-alpha", "Surau Pelantar Alpha");
+      const d = today();
+      await pool.query(
+        "insert into waktusolat.prayer_schedules (zone_code, date, hijri_date, subuh, syuruk, zohor, asar, maghrib, isyak) values ('SGR01', $1, '1448-05-26', '05:50', '06:59', '12:59', '16:22', '19:12', '20:25') on conflict do nothing",
+        [d],
+      );
+      const n = await as(pool, user(M.adminId), (c) =>
+        c.query("select waktusolat.upsert_manual_prayer_times($1, $2::jsonb) n", [M.mosqueId, JSON.stringify([rows(d)])]));
+      expect(n.rows[0].n).toBe(1);
+
+      let p = (await as(pool, anon, (c) => c.query("select waktusolat.get_public_display('pelantar-alpha') d"))).rows[0].d;
+      expect(p.mosque.prayer_time_source).toBe("jakim");
+      expect(p.schedules.find((s: { date: string }) => s.date === d).maghrib).toBe("19:12");
+
+      await as(pool, user(M.adminId), (c) => c.query("select waktusolat.set_prayer_time_source($1, 'manual')", [M.mosqueId]));
+      p = (await as(pool, anon, (c) => c.query("select waktusolat.get_public_display('pelantar-alpha') d"))).rows[0].d;
+      expect(p.mosque.prayer_time_source).toBe("manual");
+      const today_ = p.schedules.find((s: { date: string }) => s.date === d);
+      expect(today_).toMatchObject({ maghrib: "19:05", source: "manual", hijri: "1448-05-26" });
+
+      // Re-saving the same date updates instead of duplicating.
+      await as(pool, user(M.adminId), (c) =>
+        c.query("select waktusolat.upsert_manual_prayer_times($1, $2::jsonb)", [M.mosqueId, JSON.stringify([rows(d, "19:07")])]));
+      const r = await pool.query("select count(*)::int n, max(maghrib)::text m from waktusolat.manual_prayer_times where mosque_id = $1", [M.mosqueId]);
+      expect(r.rows[0]).toEqual({ n: 1, m: "19:07:00" });
+      const audit = await pool.query("select count(*)::int n from waktusolat.audit_logs where mosque_id = $1 and action like 'prayer_times.%'", [M.mosqueId]);
+      expect(audit.rows[0].n).toBe(3);
+    });
+
+    it("rejects out-of-order times and other tenants", async () => {
+      const A = await createApprovedMosque(pool, masterId, "pelantar-beta");
+      const B = await createApprovedMosque(pool, masterId, "pelantar-gamma");
+      await expectPgError(
+        as(pool, user(A.adminId), (c) =>
+          c.query("select waktusolat.upsert_manual_prayer_times($1, $2::jsonb)", [A.mosqueId, JSON.stringify([{ ...rows(today()), asar: "11:00" }])])),
+        /check constraint/,
+      );
+      await expectPgError(
+        as(pool, user(A.adminId), (c) =>
+          c.query("select waktusolat.upsert_manual_prayer_times($1, $2::jsonb)", [B.mosqueId, JSON.stringify([rows(today())])])),
+        /forbidden/,
+      );
+      await expectPgError(as(pool, user(A.adminId), (c) => c.query("select waktusolat.set_prayer_time_source($1, 'manual')", [B.mosqueId])), /forbidden/);
+      await expectPgError(
+        as(pool, anon, (c) => c.query("select waktusolat.upsert_manual_prayer_times($1, '[]'::jsonb)", [A.mosqueId])),
+        /permission denied/,
+      );
+      await expectPgError(
+        as(pool, user(A.adminId), (c) => c.query("insert into waktusolat.manual_prayer_times (mosque_id, date, subuh, syuruk, zohor, asar, maghrib, isyak) values ($1, current_date, '05:00','06:00','12:00','16:00','19:00','20:00')", [A.mosqueId])),
+        /permission denied/,
+      );
+      const seen = await as(pool, user(B.adminId), (c) => c.query("select * from waktusolat.manual_prayer_times where mosque_id = $1", [A.mosqueId]));
+      expect(seen.rows).toHaveLength(0);
+    });
+
+    it("deletes a date range", async () => {
+      const M = await createApprovedMosque(pool, masterId, "pelantar-delta");
+      const dates = ["2026-12-01", "2026-12-02", "2026-12-03"];
+      await as(pool, user(M.adminId), (c) =>
+        c.query("select waktusolat.upsert_manual_prayer_times($1, $2::jsonb)", [M.mosqueId, JSON.stringify(dates.map((x) => rows(x)))]));
+      const del = await as(pool, user(M.adminId), (c) =>
+        c.query("select waktusolat.delete_manual_prayer_times($1, '2026-12-01', '2026-12-02') n", [M.mosqueId]));
+      expect(del.rows[0].n).toBe(2);
+    });
+  });
+
   describe("rate limiting", () => {
     it("allows up to the limit within a window", async () => {
       const results: boolean[] = [];

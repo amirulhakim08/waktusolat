@@ -2,7 +2,7 @@ import { requireMosqueAdmin } from "@/lib/auth";
 import { PageHeader } from "@/components/ui";
 import { formatDateTime } from "@/lib/format";
 import { currentPrayer } from "@/lib/prayer/engine";
-import { loadSchedules } from "@/lib/preview";
+import { loadMosqueSchedules } from "@/lib/preview";
 import { klDateString, nowMs } from "@/lib/time";
 import type { PrayerModeKey } from "@/lib/prayer/types";
 import { PrayerModeEditor, type ModeRow } from "./PrayerModeEditor";
@@ -19,7 +19,7 @@ export default async function PrayerModePage() {
     supabase.from("prayer_mode_settings").select("prayer, enabled, countdown_minutes, solat_minutes, countdown_message, solat_message, replaces_zohor").eq("mosque_id", mosqueId),
     supabase.from("mosque_publications").select("prayer_mode_published_at").eq("mosque_id", mosqueId).maybeSingle(),
     supabase.from("prayer_mode_overrides").select("kind, prayer, ends_at, countdown_ends_at").eq("mosque_id", mosqueId).is("cancelled_at", null).lte("starts_at", nowIso).gt("ends_at", nowIso).order("starts_at", { ascending: false }).limit(1),
-    loadSchedules(supabase, mosque.zone_code, today, today),
+    loadMosqueSchedules(supabase, mosque, today, today),
   ]);
   const sorted = ((rows ?? []) as ModeRow[]).sort((a, b) => ORDER.indexOf(a.prayer) - ORDER.indexOf(b.prayer));
   const cur = currentPrayer(now, schedules);

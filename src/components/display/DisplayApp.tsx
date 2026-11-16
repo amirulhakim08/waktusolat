@@ -67,7 +67,12 @@ export default function DisplayApp({ slug, initialPayload = null, preview = fals
 
   const offline = status === "offline";
   const warnings: string[] = [];
-  if (!state.scheduleValid) warnings.push("Data waktu solat rasmi untuk hari ini tidak dapat disahkan. Mod Solat automatik dimatikan.");
+  const manualTimes = payload.mosque.prayer_time_source === "manual";
+  if (!state.scheduleValid) {
+    warnings.push(manualTimes
+      ? "Waktu solat untuk hari ini belum dimasukkan oleh pentadbir masjid. Mod Solat automatik dimatikan."
+      : "Data waktu solat rasmi untuk hari ini tidak dapat disahkan. Mod Solat automatik dimatikan.");
+  }
   if (offline) warnings.push(`Luar talian — memaparkan data tersimpan${lastSyncAt ? ` (dikemas kini ${new Date(lastSyncAt).toLocaleTimeString("ms-MY", { timeZone: "Asia/Kuala_Lumpur", hour: "2-digit", minute: "2-digit" })})` : ""}.`);
   if (live && !synced && offline) warnings.push("Jam peranti belum disegerakkan dengan pelayan.");
 
@@ -108,6 +113,7 @@ export default function DisplayApp({ slug, initialPayload = null, preview = fals
             <h1 className="truncate text-[4.6vh] font-bold leading-tight tracking-tight text-gold-300" data-testid="mosque-name">{mosqueName}</h1>
             <p className="truncate text-[2.2vh] text-white/70">
               {malayDayName(today)}, {formatMalayDate(today)}{hijri && <span className="text-gold-400"> · {hijri}</span>}
+              {manualTimes && <span className="text-white/50" data-testid="manual-label"> · Waktu ditetapkan oleh masjid</span>}
             </p>
           </div>
         </div>

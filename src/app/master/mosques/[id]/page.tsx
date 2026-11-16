@@ -40,8 +40,9 @@ export default async function MosqueDetail({ params }: PageProps<"/master/mosque
         <div className="space-y-6 lg:col-span-2">
           <Card>
             <CardTitle action={<Badge tone={m.status === "active" ? "green" : "red"}>{STATUS_LABELS[m.status]}</Badge>}>Ringkasan</CardTitle>
-            <dl className="grid gap-4 text-sm sm:grid-cols-3">
+            <dl className="grid gap-4 text-sm sm:grid-cols-2 lg:grid-cols-4">
               <div><dt className="text-xs uppercase text-black/50">Pautan awam</dt><dd className="font-medium">/{m.slug}</dd></div>
+              <div><dt className="text-xs uppercase text-black/50">Sumber waktu solat</dt><dd className="font-medium">{m.prayer_time_source === "manual" ? "Manual (dimasukkan masjid)" : `JAKIM ${m.zone_code}`}</dd></div>
               <div><dt className="text-xs uppercase text-black/50">Pentadbir</dt><dd className="font-medium">{active?.profiles?.full_name ?? "Tiada"}<br /><span className="text-xs text-black/55">{active?.profiles?.email}</span></dd></div>
               <div><dt className="text-xs uppercase text-black/50">Playlist diterbitkan</dt><dd className="font-medium">{pv ? `Versi ${pv.version} · ${formatDateTime(pv.published_at)}` : "Belum"}</dd></div>
             </dl>
