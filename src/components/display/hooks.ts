@@ -83,6 +83,10 @@ export function useDisplayData(slug: string, initial: DisplayPayload | null, liv
   const [status, setStatus] = useState<LoadStatus>(initial ? "ready" : "loading");
   const [lastSyncAt, setLastSyncAt] = useState<string | null>(null);
   const inflight = useRef(false);
+  const payloadRef = useRef(payload);
+  useEffect(() => {
+    payloadRef.current = payload;
+  }, [payload]);
 
   const load = useCallback(async (bust = false) => {
     if (!live || inflight.current) return;
@@ -96,6 +100,16 @@ export function useDisplayData(slug: string, initial: DisplayPayload | null, liv
         return;
       }
       if (!res.ok) throw new Error(String(res.status));
+      if (res.headers.get("x-ws-offline-cache")) {
+        // Served by the service worker from its offline cache: keep the newest
+        // copy we already have, but report that we are offline.
+        if (!payloadRef.current) {
+          const cachedData = await res.json();
+          if (!cachedData.redirect && !cachedData.unavailable) setPayload(cachedData as DisplayPayload);
+        }
+        setStatus("offline");
+        return;
+      }
       const data = await res.json();
       if (data.redirect) {
         window.location.replace(`/${data.redirect}`);

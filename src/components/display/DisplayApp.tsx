@@ -3,7 +3,7 @@ import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { computeDisplayState, currentPrayer, nextPrayer, scheduleFor } from "@/lib/prayer/engine";
 import { PRAYER_KEYS, PRAYER_LABELS, type DaySchedule, type PrayerKey } from "@/lib/prayer/types";
 import {
-  formatClock, formatCountdown, formatHHMM, formatHijri, formatMalayDate, isFriday, klDateString, malayDayName,
+  addDays, formatClock, formatCountdown, formatHHMM, formatHijri, formatMalayDate, isFriday, klDateString, malayDayName,
 } from "@/lib/time";
 import { Slideshow, srcFor } from "./Slideshow";
 import { resetSessionId, sessionId, useDisplayData, useServerClock, useTick, useWakeLock } from "./hooks";
@@ -75,6 +75,10 @@ export default function DisplayApp({ slug, initialPayload = null, preview = fals
   }
   if (offline) warnings.push(`Luar talian — memaparkan data tersimpan${lastSyncAt ? ` (dikemas kini ${new Date(lastSyncAt).toLocaleTimeString("ms-MY", { timeZone: "Asia/Kuala_Lumpur", hour: "2-digit", minute: "2-digit" })})` : ""}.`);
   if (live && !synced && offline) warnings.push("Jam peranti belum disegerakkan dengan pelayan.");
+  const lastDay = payload.schedules.at(-1)?.date;
+  if (offline && lastDay && state.scheduleValid && lastDay <= addDays(klDateString(now), 2)) {
+    warnings.push(`Waktu solat tersimpan hanya sehingga ${formatMalayDate(lastDay)}. Sila sambungkan semula internet.`);
+  }
 
   if (state.mode === "countdown" && state.countdownEndsAt) {
     return (
@@ -334,6 +338,18 @@ function useServiceWorker(enabled: boolean, payload: DisplayPayload | null) {
   useEffect(() => {
     if (!enabled || !("serviceWorker" in navigator)) return;
     navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch(() => undefined);
+    // Ask the browser not to evict our caches under storage pressure (best effort).
+    navigator.storage?.persist?.().catch(() => undefined);
+    // Precache this page and every same-origin asset it has loaded, so a
+    // reload/restart works offline even if they loaded before the SW existed.
+    navigator.serviceWorker.ready
+      .then((reg) => {
+        const assets = performance.getEntriesByType("resource")
+          .map((e) => e.name)
+          .filter((u) => u.startsWith(location.origin));
+        reg.active?.postMessage({ type: "precache-shell", urls: [location.href, ...new Set(assets)] });
+      })
+      .catch(() => undefined);
   }, [enabled]);
   const version = payload?.playlist?.version;
   useEffect(() => {
