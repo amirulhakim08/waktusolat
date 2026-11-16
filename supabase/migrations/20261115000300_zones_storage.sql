@@ -79,7 +79,7 @@ on conflict (code) do update set state = excluded.state, name = excluded.name;
 -- ---------------------------------------------------------------------
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values
-  ('waktusolat-media', 'waktusolat-media', true, 104857600, array['image/jpeg','image/png','image/webp','video/mp4']),
+  ('waktusolat-media', 'waktusolat-media', true, 52428800, array['image/jpeg','image/png','image/webp','video/mp4']),
   ('waktusolat-documents', 'waktusolat-documents', false, 5242880,
    array['application/pdf','image/jpeg','image/png','image/webp'])
 on conflict (id) do update
