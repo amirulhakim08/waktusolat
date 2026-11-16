@@ -20,7 +20,7 @@ export async function GET(req: Request) {
   const { data: mosques } = await db.from("mosques").select("zone_code").eq("status", "active");
   const zones = [...new Set((mosques ?? []).map((m) => m.zone_code as string))];
   const prayer: Record<string, unknown> = {};
-  for (const zone of zones) prayer[zone] = await ensureZoneSchedules(zone, { daysAhead: 14 });
+  for (const zone of zones) prayer[zone] = await ensureZoneSchedules(zone, { daysAhead: 31 });
 
   const { data: released } = await db.rpc("cleanup_expired_reservations");
   const deletion = await processDeletionQueue(500);

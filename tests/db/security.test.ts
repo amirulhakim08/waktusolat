@@ -617,6 +617,17 @@ describe.skipIf(!hasDb)("database: registration, approval & tenancy", () => {
       expect(seen.rows).toHaveLength(0);
     });
 
+    it("public payload carries 30 days ahead for offline displays", async () => {
+      const M = await createApprovedMosque(pool, masterId, "pelantar-epsilon");
+      const d = (n: number) => new Date(Date.now() + 8 * 3600_000 + n * 86400_000).toISOString().slice(0, 10);
+      await as(pool, user(M.adminId), async (c) => {
+        await c.query("select waktusolat.upsert_manual_prayer_times($1, $2::jsonb)", [M.mosqueId, JSON.stringify([rows(d(29)), rows(d(31))])]);
+        await c.query("select waktusolat.set_prayer_time_source($1, 'manual')", [M.mosqueId]);
+      });
+      const p = (await as(pool, anon, (c) => c.query("select waktusolat.get_public_display('pelantar-epsilon') d"))).rows[0].d;
+      expect(p.schedules.map((s: { date: string }) => s.date)).toEqual([d(29)]);
+    });
+
     it("deletes a date range", async () => {
       const M = await createApprovedMosque(pool, masterId, "pelantar-delta");
       const dates = ["2026-12-01", "2026-12-02", "2026-12-03"];
