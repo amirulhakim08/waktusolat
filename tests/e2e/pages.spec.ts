@@ -28,6 +28,20 @@ test.describe("public pages & route protection", () => {
     await expect(page.getByRole("button", { name: "Log Masuk" })).toBeVisible();
   });
 
+  test("wide tables inside dashboard grids never widen the page on phones", async ({ browser }) => {
+    const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
+    const page = await ctx.newPage();
+    await page.goto("/register");
+    const width = await page.evaluate(() => {
+      const host = document.createElement("div");
+      host.innerHTML = `<div class="mt-6 grid gap-6 lg:grid-cols-3"><div class="lg:col-span-2"><section><div class="overflow-x-auto"><table class="min-w-full"><tr><td class="whitespace-nowrap">${"Permohonan diluluskan Masjid Al-Hidayah ".repeat(6)}</td></tr></table></div></section></div></div>`;
+      document.querySelector("main")!.appendChild(host);
+      return document.documentElement.scrollWidth;
+    });
+    expect(width).toBeLessThanOrEqual(390);
+    await ctx.close();
+  });
+
   test("manifest and service worker are served", async ({ request }) => {
     const m = await request.get("/manifest.webmanifest");
     expect(m.ok()).toBe(true);

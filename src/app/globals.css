@@ -63,3 +63,12 @@ body { background: #f6f7f5; color: var(--color-ink); font-family: var(--font-san
 @media (prefers-reduced-motion: reduce) {
   .slide-layer { transition: none !important; }
 }
+
+/* Implicit grid columns are sized by content, so a wide table inside a card
+   could push the whole page wider than a phone screen. Default every grid to
+   one shrinkable column; responsive grid-cols-* utilities still override this
+   (base layer < utilities layer). Tables scroll inside their own container. */
+@layer base {
+  .grid { grid-template-columns: minmax(0, 1fr); }
+  .grid > * { min-width: 0; }
+}
