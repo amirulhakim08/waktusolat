@@ -1,6 +1,7 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { DisplayPayload } from "./types";
+import { REALTIME_PREFIX } from "@/lib/constants";
 
 const safeGet = (k: string) => { try { return localStorage.getItem(k); } catch { return null; } };
 const safeSet = (k: string, v: string) => { try { localStorage.setItem(k, v); } catch { /* quota / private mode */ } };
@@ -156,7 +157,7 @@ export function useDisplayData(slug: string, initial: DisplayPayload | null, liv
       if (cancelled) return;
       const client = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
       const channel = client
-        .channel(`display:${mosqueId}`)
+        .channel(`${REALTIME_PREFIX}:${mosqueId}`)
         .on("broadcast", { event: "update" }, () => {
           // Small jitter so many TVs don't stampede the API at once.
           setTimeout(() => void load(true), Math.random() * 3000);

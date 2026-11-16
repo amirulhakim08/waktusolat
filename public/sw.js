@@ -19,7 +19,7 @@ self.addEventListener("activate", (event) => {
   })());
 });
 
-const isMedia = (url) => url.pathname.includes("/storage/v1/object/public/media/");
+const isMedia = (url) => url.pathname.includes("/storage/v1/object/public/waktusolat-media/");
 const isPrivate = (url) => /^\/(admin|master|login|register|permohonan|auth)(\/|$)/.test(url.pathname);
 
 async function networkFirst(req, cacheName) {

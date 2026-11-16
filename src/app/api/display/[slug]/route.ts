@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { isSupabaseConfigured, publicEnv } from "@/lib/env";
 import { klDateString } from "@/lib/time";
+import { DB_SCHEMA, MEDIA_BUCKET } from "@/lib/constants";
 
 export const dynamic = "force-dynamic";
 
@@ -15,7 +16,7 @@ export async function GET(_req: Request, ctx: RouteContext<"/api/display/[slug]"
   if (!isSupabaseConfigured()) return Response.json({ error: "not_configured" }, { status: 503 });
 
   const { supabaseUrl, supabaseAnonKey } = publicEnv();
-  const db = createClient(supabaseUrl, supabaseAnonKey, { auth: { persistSession: false } });
+  const db = createClient(supabaseUrl, supabaseAnonKey, { auth: { persistSession: false }, db: { schema: DB_SCHEMA } });
   const load = async () => {
     const { data, error } = await db.rpc("get_public_display", { p_slug: slug });
     if (error) throw error;
@@ -40,7 +41,7 @@ export async function GET(_req: Request, ctx: RouteContext<"/api/display/[slug]"
     }
 
     return Response.json(
-      { ...data, media_base: `${supabaseUrl}/storage/v1/object/public/media/` },
+      { ...data, media_base: `${supabaseUrl}/storage/v1/object/public/${MEDIA_BUCKET}/` },
       { headers: { "Cache-Control": "public, s-maxage=10, stale-while-revalidate=30" } },
     );
   } catch (e) {

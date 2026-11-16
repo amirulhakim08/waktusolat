@@ -4,7 +4,7 @@
 -- https://www.e-solat.gov.my before production; zones can be
 -- (de)activated without code changes (prayer_zones.is_active).
 -- =====================================================================
-insert into public.prayer_zones (code, state, name) values
+insert into waktusolat.prayer_zones (code, state, name) values
 ('JHR01','Johor','Pulau Aur dan Pulau Pemanggil'),
 ('JHR02','Johor','Johor Bahru, Kota Tinggi, Mersing, Kulai'),
 ('JHR03','Johor','Kluang, Pontian'),
@@ -68,19 +68,19 @@ insert into public.prayer_zones (code, state, name) values
 on conflict (code) do update set state = excluded.state, name = excluded.name;
 
 -- ---------------------------------------------------------------------
--- Storage buckets
---   media                  : public-read, writes only via server-issued
+-- Storage buckets (prefixed: the Supabase project may be shared)
+--   waktusolat-media       : public-read, writes only via server-issued
 --                            signed upload URLs; paths contain random
 --                            UUIDs and are never listed publicly.
---   registration-documents : PRIVATE; service_role only (signed URLs
+--   waktusolat-documents   : PRIVATE; service_role only (signed URLs
 --                            generated server-side for the Master).
 -- No storage.objects policies are created for anon/authenticated, so
 -- neither role can list, write or delete objects directly.
 -- ---------------------------------------------------------------------
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values
-  ('media', 'media', true, 104857600, array['image/jpeg','image/png','image/webp','video/mp4']),
-  ('registration-documents', 'registration-documents', false, 5242880,
+  ('waktusolat-media', 'waktusolat-media', true, 104857600, array['image/jpeg','image/png','image/webp','video/mp4']),
+  ('waktusolat-documents', 'waktusolat-documents', false, 5242880,
    array['application/pdf','image/jpeg','image/png','image/webp'])
 on conflict (id) do update
   set public = excluded.public,

@@ -21,10 +21,10 @@ async function main() {
     throw new Error("Set NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, MASTER_EMAIL and MASTER_PASSWORD");
   }
   if (password.length < 12) throw new Error("MASTER_PASSWORD must be at least 12 characters");
-  const db = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
+  const db = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false }, db: { schema: "waktusolat" } });
 
   let userId: string | undefined;
-  const created = await db.auth.admin.createUser({ email, password, email_confirm: true, user_metadata: { full_name: name } });
+  const created = await db.auth.admin.createUser({ email, password, email_confirm: true, user_metadata: { full_name: name, app: "waktusolat" } });
   if (created.data.user) {
     userId = created.data.user.id;
     console.log(`Created auth user ${email}`);

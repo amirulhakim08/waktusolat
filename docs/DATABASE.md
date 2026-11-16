@@ -1,6 +1,6 @@
 # Database
 
-PostgreSQL (Supabase). All business rules that matter for security live in the database: Row Level Security on every table, column-level grants, and `SECURITY DEFINER` functions for privileged transitions. The Next.js server never relies on client-side checks.
+PostgreSQL (Supabase). Everything lives in the **`waktusolat` schema** (buckets `waktusolat-media` / `waktusolat-documents`, realtime channels `waktusolat-display:*`) so the Supabase project can be shared with other applications. Only auth users created by WaktuSolat (`raw_user_meta_data.app = 'waktusolat'`) get a WaktuSolat profile; other apps' users are ignored and cannot log in to WaktuSolat. All business rules that matter for security live in the database: Row Level Security on every table, column-level grants, and `SECURITY DEFINER` functions for privileged transitions. The Next.js server never relies on client-side checks.
 
 ## Roles
 
@@ -66,8 +66,8 @@ Every tenant table carries `mosque_id`; `playlist_items` additionally has a comp
 
 ## Storage
 
-- `media` bucket: public read, writes only through server-issued signed upload URLs; path `mosques/{mosque_id}/media/{asset_id}.{ext}`. No `storage.objects` policies exist for `anon`/`authenticated`, so they cannot list, write or delete objects.
-- `registration-documents` bucket: private; read only through 2-minute signed URLs generated for the Master.
+- `waktusolat-media` bucket: public read, writes only through server-issued signed upload URLs; path `mosques/{mosque_id}/media/{asset_id}.{ext}`. No `storage.objects` policies exist for `anon`/`authenticated`, so they cannot list, write or delete objects.
+- `waktusolat-documents` bucket: private; read only through 2-minute signed URLs generated for the Master.
 
 ## Testing
 

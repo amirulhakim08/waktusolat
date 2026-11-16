@@ -79,20 +79,20 @@ export async function createAuthUser(pool: Pool, opts: { email?: string; confirm
   const id = randomUUID();
   await pool.query(
     "insert into auth.users (id, email, email_confirmed_at, raw_user_meta_data) values ($1, $2, $3, $4)",
-    [id, opts.email ?? `${id.slice(0, 8)}@example.test`, opts.confirmed ? new Date() : null, JSON.stringify(opts.meta ?? {})],
+    [id, opts.email ?? `${id.slice(0, 8)}@example.test`, opts.confirmed ? new Date() : null, JSON.stringify({ app: "waktusolat", ...(opts.meta ?? {}) })],
   );
   return id;
 }
 
 export async function createMaster(pool: Pool) {
   const id = await createAuthUser(pool, { confirmed: true });
-  await as(pool, service, (c) => c.query("select public.bootstrap_master($1)", [id]));
+  await as(pool, service, (c) => c.query("select waktusolat.bootstrap_master($1)", [id]));
   return id;
 }
 
 export async function submitApplication(pool: Pool, applicantId: string, mosqueName = "Surau Al-Amin") {
   const r = await pool.query(
-    `insert into public.mosque_applications
+    `insert into waktusolat.mosque_applications
       (applicant_id, full_name, email, phone, mosque_name, address, state, district, zone_code, applicant_position)
      values ($1, 'Ahmad', 'a@example.test', '0123456789', $2, 'Jalan 1', 'Selangor', 'Petaling', 'SGR01', 'Setiausaha')
      returning id, status`,
@@ -106,7 +106,7 @@ export async function createApprovedMosque(pool: Pool, masterId: string, slug: s
   const adminId = await createAuthUser(pool, { confirmed: true });
   const app = await submitApplication(pool, adminId, name);
   const r = await as(pool, user(masterId), (c) =>
-    c.query("select public.approve_application($1, $2) as id", [app.id, slug]),
+    c.query("select waktusolat.approve_application($1, $2) as id", [app.id, slug]),
   );
   return { adminId, mosqueId: r.rows[0].id as string, applicationId: app.id };
 }
@@ -114,7 +114,7 @@ export async function createApprovedMosque(pool: Pool, masterId: string, slug: s
 export async function addReadyImage(pool: Pool, mosqueId: string, size = 1000) {
   const id = randomUUID();
   await pool.query(
-    `insert into public.media_assets (id, mosque_id, kind, status, name, storage_path, mime_type, size_bytes)
+    `insert into waktusolat.media_assets (id, mosque_id, kind, status, name, storage_path, mime_type, size_bytes)
      values ($1, $2, 'image', 'ready', 'Poster', $3, 'image/jpeg', $4)`,
     [id, mosqueId, `mosques/${mosqueId}/media/${id}.jpg`, size],
   );

@@ -26,7 +26,7 @@ Fill in `.env.local`:
 
 ## 2. Database
 
-Apply the migrations in `supabase/migrations/` in filename order. Either:
+Apply the migrations in `supabase/migrations/` in filename order. All objects are created in the **`waktusolat` schema**, so the project can be shared with other apps. Afterwards add `waktusolat` to **Settings → Data API → Exposed schemas**. Either (dedicated project only):
 
 ```bash
 npx supabase link --project-ref <your-ref>
@@ -43,7 +43,7 @@ or paste each file into the Supabase SQL editor in order:
 ## 3. Supabase Auth settings
 
 - **Authentication → Providers → Email**: enable, **Confirm email = ON**.
-- **Authentication → URL Configuration**: Site URL = your site URL; add `http://localhost:3000/auth/callback` and `https://waktusolat.vercel.app/auth/callback` to Redirect URLs.
+- **Authentication → URL Configuration**: Site URL = your site URL (leave unchanged in a shared project); add `http://localhost:3000/auth/callback` and `https://waktusolat.vercel.app/auth/callback` to Redirect URLs.
 - Recommended: set a custom SMTP provider (the built-in mailer is rate-limited) and a minimum password length of 10.
 
 ## 4. Create the Master Super Admin (once)

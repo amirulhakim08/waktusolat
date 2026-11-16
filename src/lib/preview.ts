@@ -1,11 +1,14 @@
 import "server-only";
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { createClient } from "./supabase/server";
+
+type SupabaseClient = Awaited<ReturnType<typeof createClient>>;
 import type { DisplayPayload } from "@/components/display/types";
 import type { DaySchedule, PrayerModeConfig, PrayerModeKey, PrayerOverride } from "./prayer/types";
 import type { SlideItem } from "./slideshow";
 import type { MosqueRow } from "./auth";
 import { addDays, klDateString } from "./time";
 import { publicEnv } from "./env";
+import { MEDIA_BUCKET } from "./constants";
 
 export async function loadSchedules(supabase: SupabaseClient, zone: string, from: string, to: string): Promise<DaySchedule[]> {
   const { data } = await supabase.from("prayer_schedules")
@@ -67,6 +70,6 @@ export async function buildDraftPayload(
     overrides,
     schedules,
     server_time: new Date().toISOString(),
-    media_base: `${supabaseUrl}/storage/v1/object/public/media/`,
+    media_base: `${supabaseUrl}/storage/v1/object/public/${MEDIA_BUCKET}/`,
   };
 }

@@ -7,11 +7,12 @@ Target: **https://waktusolat.vercel.app** on Vercel, with Supabase as the backen
 ### Supabase
 
 1. Create a project (region **Southeast Asia (Singapore)** recommended).
-2. Apply `supabase/migrations/*.sql` in order (`npx supabase db push` or the SQL editor).
-3. Auth → Email provider: **Confirm email ON**. URL configuration: Site URL `https://waktusolat.vercel.app`; Redirect URL `https://waktusolat.vercel.app/auth/callback`.
+2. Apply `supabase/migrations/*.sql` in order in the SQL editor. **If the project is shared with other apps, do not use `supabase db push`** (its migration history would conflict); everything WaktuSolat creates lives in the `waktusolat` schema, the `waktusolat-*` buckets and two `waktusolat_*` triggers on `auth.users`.
+   Then **Settings → Data API → Exposed schemas: add `waktusolat`** (required).
+3. Auth → Email provider: **Confirm email ON**. URL configuration: add Redirect URL `https://waktusolat.vercel.app/auth/callback`. In a shared project leave the Site URL as the other app's; WaktuSolat always passes its own redirect. Note the e-mail templates are shared with the other app.
 4. Auth → SMTP: configure a real SMTP provider for verification e-mails (the default mailer is heavily rate-limited).
-5. Storage: confirm buckets `media` (public) and `registration-documents` (private) exist (created by migration 3).
-6. Realtime: enabled by default. Displays use **public broadcast channels** `display:{mosque_id}`; if you disable "Allow public access" for Realtime, displays fall back to 60-second polling.
+5. Storage: confirm buckets `waktusolat-media` (public) and `waktusolat-documents` (private) exist (created by migration 3).
+6. Realtime: enabled by default. Displays use **public broadcast channels** `waktusolat-display:{mosque_id}`; if you disable "Allow public access" for Realtime, displays fall back to 60-second polling.
 7. Run the advisors (Database → Advisors) and resolve any warnings.
 
 ### Vercel

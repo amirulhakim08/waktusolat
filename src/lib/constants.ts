@@ -2,8 +2,16 @@ export const APP_NAME = "WaktuSolat";
 export const DEFAULT_QUOTA_BYTES = 100 * 1024 * 1024;
 export const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
 export const MAX_DOCUMENT_BYTES = 5 * 1024 * 1024;
-export const MEDIA_BUCKET = "media";
-export const DOCUMENTS_BUCKET = "registration-documents";
+/**
+ * WaktuSolat may share a Supabase project with other apps, so everything is
+ * namespaced: database schema, storage buckets, realtime channels and the
+ * auth user metadata marker.
+ */
+export const DB_SCHEMA = "waktusolat";
+export const APP_ID = "waktusolat";
+export const MEDIA_BUCKET = "waktusolat-media";
+export const DOCUMENTS_BUCKET = "waktusolat-documents";
+export const REALTIME_PREFIX = "waktusolat-display";
 
 export const DURATION_OPTIONS = [5, 10, 15, 20, 30, 60] as const;
 export const TRANSITION_MS_OPTIONS = [500, 1000, 1500, 2000, 3000] as const;

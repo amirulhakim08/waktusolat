@@ -55,7 +55,7 @@ export async function POST(req: Request) {
     password: input.password,
     options: {
       emailRedirectTo: `${publicEnv().siteUrl}/auth/callback?next=/permohonan`,
-      data: { full_name: input.full_name, phone: input.phone },
+      data: { full_name: input.full_name, phone: input.phone, app: "waktusolat" },
     },
   });
   if (signUpError || !signUp.user) {

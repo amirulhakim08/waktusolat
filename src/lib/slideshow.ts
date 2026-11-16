@@ -1,4 +1,4 @@
-import type { Fit, Transition } from "./constants";
+import { MEDIA_BUCKET, type Fit, type Transition } from "./constants";
 
 /** Item as published in a playlist_versions snapshot. */
 export interface SlideItem {
@@ -19,7 +19,7 @@ export interface SlideItem {
 
 export function mediaUrl(path: string, base = process.env.NEXT_PUBLIC_SUPABASE_URL ?? ""): string {
   if (/^https?:\/\//.test(path) || path.startsWith("/")) return path;
-  return `${base.replace(/\/$/, "")}/storage/v1/object/public/media/${path.split("/").map(encodeURIComponent).join("/")}`;
+  return `${base.replace(/\/$/, "")}/storage/v1/object/public/${MEDIA_BUCKET}/${path.split("/").map(encodeURIComponent).join("/")}`;
 }
 
 /**

@@ -1,7 +1,8 @@
 import "server-only";
 import { publicEnv } from "./env";
+import { REALTIME_PREFIX } from "./constants";
 
-export const displayChannel = (mosqueId: string) => `display:${mosqueId}`;
+export const displayChannel = (mosqueId: string) => `${REALTIME_PREFIX}:${mosqueId}`;
 
 /**
  * Sends a tiny "something changed" broadcast to every display of a mosque.
